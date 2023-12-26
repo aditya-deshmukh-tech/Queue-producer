@@ -1,6 +1,7 @@
 package com.queue.sender.queuemessageproducer.controller;
 
-import com.queue.sender.queuemessageproducer.services.QueueDataSender;
+import com.queue.sender.queuemessageproducer.services.ActiveMQDataSender;
+import com.queue.sender.queuemessageproducer.services.KafkaDataSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +15,15 @@ import java.util.HashMap;
 public class QueueSenderController {
 
     @Autowired
-    private QueueDataSender queueDataSender;
+    private ActiveMQDataSender activeMQDataSender;
+
+//    @Autowired
+//    private KafkaDataSender kafkaDataSender;
 
     @PostMapping("/to-queue")
     public ResponseEntity<?> postToQueue(@RequestBody HashMap<String, Object> data) {
-        queueDataSender.sendData(data);
+        //activeMQDataSender.sendData(data);
+        activeMQDataSender.sendData(data);
         return ResponseEntity.status(HttpStatus.CREATED).body("will be pushed to queue");
     }
 }

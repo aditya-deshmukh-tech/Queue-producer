@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -38,17 +40,21 @@ public abstract class KafkaQueueSender implements QueueSenderInterface {
 
     public void persistToRetryDatabase(Map<String, Object> data) {
         // for current scenario using queue but will use mongodb database in future here
+        kafkaLogger.info("persisting to database..");
         getRetryChannelInterface().add(data);
     }
 
-    //@Scheduled(cron = "0 */5 * ? * *")
+    @Scheduled(fixedRate = 10000)
     public void retryFromDatabase() {
         // for current scenario using queue but will use mongodb database in future here
+        kafkaLogger.info("retrying from database...");
+        kafkaLogger.info("retry database is empty {}", getRetryChannelInterface().isEmpty());
         while (!getRetryChannelInterface().isEmpty()) {
             try {
                 Map<String, Object> data = getRetryChannelInterface().getOne();
                 kafkaTemplate.send(KAFKA_TOPIC, data).get();
                 getRetryChannelInterface().remove(data);
+                kafkaLogger.info("resending data succesfull..");
             } catch (InterruptedException interruptedException) {
                 kafkaLogger.error("failed to retry for data ", interruptedException);
             } catch (ExecutionException e) {
